@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suggested Places to Visit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .places-container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 800px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .places-container:hover {
+            transform: scale(1.02);
+        }
+
+        .places {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            text-align: left;
+            padding: 0;
+        }
+
+        .place-card {
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .place-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .place-card h3 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .place-card p {
+            color: #777;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .place-card .location {
+            font-size: 14px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .back-btn {
+            background-color: #f44336;
+            margin-top: 30px;
+        }
+
+        .back-btn:hover {
+            background-color: #e53935;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="places-container">
+        <h1>Suggested Places to Visit</h1>
+       
+        <div id="places-list" class="places"></div>
+
+        <button class="back-btn" onclick="window.history.back()">Back to Main</button>
+    </div>
+
+    <script>
+        const placesToVisit = {
+            "Mumbai": [
+                { name: "Gateway of India", description: "A historical monument overlooking the Arabian Sea.", location: "South Mumbai" },
+                { name: "Marine Drive", description: "A scenic promenade along the coastline.", location: "South Mumbai" },
+                { name: "Elephanta Caves", description: "Caves with rock-cut temples dedicated to Hindu gods.", location: "Elephanta Island" },
+                { name: "Chhatrapati Shivaji Maharaj Terminus", description: "An iconic Victorian railway station.", location: "Fort" },
+                { name: "Juhu Beach", description: "A popular beach with a lively atmosphere.", location: "Juhu" }
+            ],
+            "Delhi": [
+                { name: "Red Fort", description: "A symbol of Mughal power and one of Delhi's most iconic landmarks.", location: "Old Delhi" },
+                { name: "India Gate", description: "A war memorial dedicated to Indian soldiers.", location: "Central Delhi" },
+                { name: "Qutub Minar", description: "A UNESCO World Heritage site and one of the tallest brick minarets in the world.", location: "Mehrauli" },
+                { name: "Lotus Temple", description: "A stunning flower-shaped temple.", location: "Bahapur" },
+                { name: "Humayun's Tomb", description: "A Mughal architecture masterpiece and UNESCO World Heritage site.", location: "Nizamuddin" }
+            ],
+            "Chennai": [
+                { name: "Marina Beach", description: "A popular beach and the longest urban beach in India.", location: "Marina" },
+                { name: "Kapaleeshwarar Temple", description: "A historic Dravidian-style temple dedicated to Lord Shiva.", location: "Mylapore" },
+                { name: "Fort St. George", description: "A British-era fort and one of the oldest surviving structures in India.", location: "Chennai City" },
+                { name: "Santhome Cathedral Basilica", description: "A prominent church with historical and architectural significance.", location: "Santhome" },
+                { name: "Elliot's Beach", description: "A peaceful beach away from the hustle and bustle of the city.", location: "Besant Nagar" }
+            ],
+            "Goa": [
+                { name: "Baga Beach", description: "A popular beach known for water sports and vibrant nightlife.", location: "North Goa" },
+                { name: "Basilica of Bom Jesus", description: "A UNESCO World Heritage site and home to the mortal remains of St. Francis Xavier.", location: "Old Goa" },
+                { name: "Dudhsagar Waterfalls", description: "One of the tallest waterfalls in India, located in the Bhagwan Mahavir Wildlife Sanctuary.", location: "Sanguem" },
+                { name: "Aguada Fort", description: "A 17th-century Portuguese fort with panoramic views of the Arabian Sea.", location: "Sinquerim" },
+                { name: "Anjuna Flea Market", description: "A lively market with local handicrafts, jewelry, and more.", location: "Anjuna" }
+            ],
+            "Lucknow": [
+                { name: "Bara Imambara", description: "An architectural masterpiece with a maze known as Bhul-Bhulaiya.", location: "Chowk" },
+                { name: "Chota Imambara", description: "A beautiful monument with intricate designs and gardens.", location: "Qaiserbagh" },
+                { name: "Rumi Darwaza", description: "An imposing gateway built in the Awadhi style.", location: "Hazratganj" },
+                { name: "Ambedkar Memorial Park", description: "A large public park with statues and memorials dedicated to Dr. Ambedkar.", location: "Gomti Nagar" },
+                { name: "Hazratganj Market", description: "A bustling shopping area known for its variety of goods.", location: "Hazratganj" }
+            ],
+"Bangalore": [
+    { "name": "Bangalore Palace", "description": "A Tudor-style palace with elaborate carvings and sprawling grounds.", "location": "Vasanth Nagar" },
+    { "name": "Lalbagh Botanical Garden", "description": "A vast botanical garden with a diverse collection of plants and a glasshouse.", "location": "Lalbagh" },
+    { "name": "Vidhana Soudha", "description": "The seat of the Karnataka State Legislature, known for its Dravidian architecture.", "location": "Cubbon Park" },
+    { "name": "Cubbon Park", "description": "A large park with walking trails, gardens, and historical buildings.", "location": "Central Bangalore" },
+    { "name": "ISKCON Temple Bangalore", "description": "A large temple complex dedicated to Lord Krishna, known for its architecture and spiritual atmosphere.", "location": "Rajajinagar" }
+],
+"Chandigarh": [
+    { "name": "Rock Garden", "description": "A unique sculpture garden made from industrial and urban waste.", "location": "Near Sukhna Lake" },
+    { "name": "Sukhna Lake", "description": "A scenic lake perfect for boating, walking, and enjoying the sunset.", "location": "Northern edge of Chandigarh" },
+    { "name": "Rose Garden", "description": "Asia's largest rose garden, featuring a vast collection of roses.", "location": "Middle of Chandigarh" },
+    { "name": "Sector 17 Market", "description": "A vibrant shopping and entertainment hub in the heart of the city.", "location": "Central Chandigarh" },
+    { "name": "Le Corbusier Centre", "description": "A museum dedicated to the architect who designed Chandigarh.", "location": "Madhya Marg" }
+],
+"Kolkata": [
+    { "name": "Victoria Memorial", "description": "A grand white marble monument and museum showcasing colonial history.", "location": "Maidan area" },
+    { "name": "Howrah Bridge", "description": "An iconic cantilever bridge over the Hooghly River.", "location": "Howrah" },
+    { "name": "Indian Museum", "description": "One of the oldest and largest museums in India, with a vast collection of artifacts.", "location": "Park Street area" },
+    { "name": "Kalighat Kali Temple", "description": "A significant Hindu temple dedicated to Goddess Kali.", "location": "Kalighat" },
+    { "name": "Park Street", "description": "A vibrant street known for its restaurants, bars, and nightlife.", "location": "Central Kolkata" }
+],
+"Jaipur": [
+    { "name": "Amer Fort", "description": "A majestic fort known for its artistic Hindu elements and cobbled pathways.", "location": "Amer" },
+    { "name": "Hawa Mahal", "description": "A palace with a unique honeycomb structure, designed for royal ladies to observe street festivals.", "location": "Badi Choupad" },
+    { "name": "City Palace", "description": "A complex of courtyards, gardens, and buildings, showcasing a blend of Rajasthani and Mughal architecture.", "location": "City Center" },
+    { "name": "Jantar Mantar", "description": "An astronomical observatory with a collection of architectural astronomical instruments.", "location": "Tripolia Bazaar" },
+    { "name": "Nahargarh Fort", "description": "A hilltop fort offering panoramic views of Jaipur city.", "location": "Aravalli Hills" }
+],
+"Ahmedabad": [
+    { "name": "Sabarmati Ashram", "description": "Mahatma Gandhi's residence, now a museum showcasing his life and teachings.", "location": "Sabarmati" },
+    { "name": "Adalaj Stepwell", "description": "An intricately carved stepwell with five stories, showcasing Indo-Islamic architecture.", "location": "Adalaj" },
+    { "name": "Kankaria Lake", "description": "A large circular lake with a waterfront promenade, amusement park, and zoo.", "location": "Maninagar" },
+    { "name": "Jama Masjid", "description": "A historic mosque known for its yellow sandstone architecture and intricate carvings.", "location": "Manek Chowk" },
+    { "name": "Sidi Saiyyed Mosque", "description": "Famous for its intricate stone latticework, particularly the 'Tree of Life' design.", "location": "Lal Darwaja" }
+],
+"Vijayawada": [
+    { "name": "Kanaka Durga Temple", "description": "A famous temple dedicated to Goddess Durga, located on Indrakeeladri Hill.", "location": "Indrakeeladri Hill" },
+    { "name": "Undavalli Caves", "description": "Ancient rock-cut caves with sculptures dating back to the 4th-5th centuries.", "location": "Undavalli" },
+    { "name": "Prakasam Barrage", "description": "A major water regulation structure on the Krishna River, offering scenic views.", "location": "Krishna River" },
+    { "name": "Bhavani Island", "description": "A scenic island on the Krishna River with recreational activities and gardens.", "location": "Krishna River" },
+    { "name": "Rajiv Gandhi Park", "description": "A well-maintained park with gardens, fountains, and recreational facilities.", "location": "MG Road" }
+],
+"Hyderabad": [
+    { "name": "Charminar", "description": "An iconic monument and mosque with four minarets, symbolizing the city.", "location": "Old City" },
+    { "name": "Golconda Fort", "description": "A historic fort with impressive architecture and a rich history.", "location": "Golconda" },
+    { "name": "Chowmahalla Palace", "description": "A grand palace complex showcasing the Nizam's royal heritage.", "location": "Khilwat" },
+    { "name": "Hussain Sagar Lake", "description": "A large lake with a monolithic Buddha statue in the center.", "location": "Hyderabad-Secunderabad" },
+    { "name": "Birla Mandir", "description": "A white marble temple dedicated to Lord Venkateswara, offering panoramic city views.", "location": "Naubat Pahad" }
+],
+"Amritsar": [
+    { "name": "Golden Temple (Sri Harmandir Sahib)", "description": "The holiest Sikh gurdwara, known for its golden structure and spiritual significance.", "location": "Golden Temple Road" },
+    { "name": "Jallianwala Bagh", "description": "A historic garden where the Jallianwala Bagh Massacre took place.", "location": "Near Golden Temple" },
+    { "name": "Wagah Border", "description": "The India-Pakistan border, known for the daily Beating Retreat and Change of Guards ceremony.", "location": "Wagah" },
+    { "name": "Partition Museum", "description": "A museum dedicated to the stories and memories of the Partition of India.", "location": "Town Hall" },
+    { "name": "Maharaja Ranjit Singh Museum", "description": "A museum showcasing the life and legacy of Maharaja Ranjit Singh.", "location": "Company Bagh" }
+],
+"Patna": [
+    { "name": "Golghar", "description": "A large granary with a spiral staircase, offering panoramic city views.", "location": "Near Gandhi Maidan" },
+    { "name": "Mahavir Mandir", "description": "A popular Hindu temple dedicated to Lord Hanuman.", "location": "Near Patna Junction" },
+    { "name": "Patna Museum", "description": "A museum with a rich collection of artifacts, including the Didarganj Yakshi.", "location": "Buddha Marg" },
+    { "name": "Gandhi Maidan", "description": "A large historical ground where many public gatherings and events take place.", "location": "Central Patna" },
+    { "name": "Takht Sri Harmandir Sahib Ji", "description": "One of the five Takhts of Sikhism, marking the birthplace of Guru Gobind Singh.", "location": "Patna Sahib" }
+],
+"Madurai": [
+    { "name": "Meenakshi Amman Temple", "description": "A historic Hindu temple with intricate sculptures and vibrant gopurams.", "location": "Madurai City Center" },
+    { "name": "Thirumalai Nayakkar Mahal", "description": "A 17th-century palace showcasing Indo-Saracenic architecture.", "location": "Near Meenakshi Temple" },
+    { "name": "Gandhi Memorial Museum", "description": "A museum dedicated to Mahatma Gandhi, with exhibits on his life and principles.", "location": "Tamukkam Grounds" },
+    { "name": "Koodal Azhagar Temple", "description": "An ancient Vishnu temple with Dravidian architecture.", "location": "Periyar Bus Stand Area" },
+    { "name": "Vandiyur Mariamman Teppakulam", "description": "A large temple tank known for its annual float festival.", "location": "Vandiyur" }
+],
+"Tirupati": [
+    { "name": "Sri Venkateswara Temple", "description": "A renowned Hindu temple dedicated to Lord Venkateswara, located on Tirumala Hills.", "location": "Tirumala" },
+    { "name": "Sri Govindarajaswami Temple", "description": "A historic temple dedicated to Lord Vishnu, located in the heart of Tirupati.", "location": "Tirupati City" },
+    { "name": "Sri Kapileswara Swamy Temple", "description": "A temple dedicated to Lord Shiva, known for its scenic waterfall.", "location": "Alipiri Road" },
+    { "name": "ISKCON Tirupati", "description": "A temple and cultural center dedicated to Lord Krishna.", "location": "Karakambadi Road" },
+    { "name": "Silathoranam", "description": "A natural rock arch formation, considered a geological wonder.", "location": "Tirumala Hills" }
+],
+"Kochi": [
+    { "name": "Fort Kochi", "description": "A historic area with colonial architecture, Chinese fishing nets, and art galleries.", "location": "Fort Kochi" },
+    { "name": "Mattancherry Palace (Dutch Palace)", "description": "A palace showcasing Kerala murals and Dutch architecture.", "location": "Mattancherry" },
+    { "name": "Santa Cruz Basilica", "description": "One of the oldest churches in India, known for its Gothic architecture.", "location": "Fort Kochi" },
+    { "name": "Cherai Beach", "description": "A serene beach known for its backwaters and dolphin sightings.", "location": "Cherai" },
+    { "name": "Hill Palace Museum", "description": "The largest archaeological museum in Kerala, showcasing royal artifacts.", "location": "Tripunithura" }
+],
+"Thiruvananthapuram": [
+    { "name": "Sri Padmanabhaswamy Temple", "description": "A historic Hindu temple known for its Dravidian architecture and gold plating.", "location": "East Fort" },
+    { "name": "Kovalam Beach", "description": "A popular beach with three adjacent crescent beaches, known for its lighthouse.", "location": "Kovalam" },
+    { "name": "Napier Museum", "description": "An art and natural history museum with Indo-Saracenic architecture.", "location": "Museum Compound" },
+    { "name": "Poovar Island", "description": "A scenic island known for its backwaters, beaches, and floating cottages.", "location": "Poovar" },
+    { "name": "Attukal Bhagavathy Temple", "description": "A temple known for its annual Pongala festival, which attracts millions of women.", "location": "Attukal" }
+],
+"Coimbatore": [
+    { "name": "Dhyanalinga Temple", "description": "A meditative space with a unique elliptical dome.", "location": "Isha Yoga Center" },
+    { "name": "Marudamalai Temple", "description": "A hilltop temple dedicated to Lord Murugan, offering panoramic views.", "location": "Marudamalai" },
+    { "name": "VOC Park and Zoo", "description": "A park and zoo with a variety of animals and recreational facilities.", "location": "Coimbatore City Center" },
+    { "name": "Siruvani Waterfalls", "description": "A scenic waterfall known for its pure and tasty water.", "location": "Siruvani" },
+    { "name": "Brookefields Mall", "description": "A large shopping mall with a variety of retail stores and entertainment options.", "location": "Brookefields" }
+],
+
+"Mysore": [
+    { "name": "Mysore Palace", "description": "A grand palace showcasing Indo-Saracenic architecture, known for its illuminated display.", "location": "Mysore City Center" },
+    { "name": "Chamundi Hills", "description": "A hilltop temple dedicated to Goddess Chamundeshwari, offering panoramic city views.", "location": "Chamundi Hills" },
+    { "name": "Brindavan Gardens", "description": "A sprawling garden with musical fountains and botanical displays.", "location": "Krishnarajasagara Dam" },
+    { "name": "Mysore Zoo", "description": "One of the oldest and most popular zoos in India, with a diverse collection of animals.", "location": "Indiranagar" },
+    { "name": "St. Philomena's Cathedral", "description": "A Gothic-style church known for its stained glass windows and architectural grandeur.", "location": "Lashkar Mohalla" }
+],
+"Agartala": [
+    { "name": "Ujjayanta Palace", "description": "A royal palace showcasing Indo-Saracenic architecture, now a state museum.", "location": "Palace Compound" },
+    { "name": "Jagannath Temple", "description": "A Hindu temple dedicated to Lord Jagannath, known for its Rath Yatra festival.", "location": "Palace Compound" },
+    { "name": "Neermahal", "description": "A water palace built in the middle of Rudrasagar Lake.", "location": "Melaghar" },
+    { "name": "Tripura State Museum", "description": "A museum showcasing the cultural heritage of Tripura.", "location": "Agartala City Center" },
+    { "name": "Sepahijala Wildlife Sanctuary", "description": "A wildlife sanctuary with a variety of flora and fauna, including spectacled monkeys.", "location": "Sepahijala" }
+],
+"Vadodara": [
+    { "name": "Laxmi Vilas Palace", "description": "A grand palace showcasing Indo-Saracenic architecture, known for its Durbar Hall.", "location": "Rajmahal Road" },
+    { "name": "Sayaji Gardens", "description": "A large garden with a zoo, museum, and toy train.", "location": "Near Kala Ghoda" },
+    { "name": "Maharaja Fateh Singh Museum", "description": "A museum showcasing a collection of European and Indian art.", "location": "Laxmi Vilas Palace Compound" },
+    { "name": "EME Temple (Dakshinamurty Temple)", "description": "A unique temple known for its geodesic dome and modern architecture.", "location": "Fatehgunj" },
+    { "name": "Sursagar Lake", "description": "A central lake with a large statue of Lord Shiva.", "location": "City Center" }
+],
+"Raipur": [
+    { "name": "Mahant Ghasidas Memorial Museum", "description": "A museum showcasing archaeological artifacts and cultural exhibits.", "location": "Near Ghadi Chowk" },
+    { "name": "Nandan Van Zoo and Safari", "description": "A zoo and safari park with a variety of animals.", "location": "Near Naya Raipur" },
+    { "name": "MM Fun City", "description": "An amusement park with water rides and entertainment options.", "location": "Near Naya Raipur" },
+    { "name": "Shadani Darbar", "description": "A spiritual center known for its serene atmosphere.", "location": "Near Raipur Railway Station" },
+    { "name": "Dudhadhari Monastery and Temple", "description": "An ancient temple and monastery known for its historical significance.", "location": "Near Budhapara Lake" }
+],
+"Vishakapatnam": [
+    { "name": "Kailasagiri", "description": "A hilltop park offering panoramic views of the city and the Bay of Bengal.", "location": "Kailasagiri Hill" },
+    { "name": "RK Beach (Ramakrishna Beach)", "description": "A popular beach with a scenic coastline and recreational activities.", "location": "Beach Road" },
+    { "name": "Submarine Museum", "description": "A museum housed in a real submarine, showcasing its history and technology.", "location": "RK Beach Road" },
+    { "name": "Borra Caves", "description": "Ancient limestone caves with stalactite and stalagmite formations.", "location": "Ananthagiri Hills" },
+    { "name": "Yarada Beach", "description": "A serene beach with golden sands and clear waters, known for its scenic beauty.", "location": "Yarada" }
+]
+        };
+
+        // Get city from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const city = urlParams.get('city');
+
+        // Display the places for the selected city
+        const placesList = document.getElementById("places-list");
+        const places = placesToVisit[city] || [];
+
+        places.forEach(place => {
+            const placeCard = document.createElement("div");
+            placeCard.classList.add("place-card");
+
+            placeCard.innerHTML = `
+                <h3>${place.name}</h3>
+                <p>${place.description}</p>
+                <p class="location">${place.location}</p>
+            `;
+
+            placesList.appendChild(placeCard);
+        });
+    </script>
+</body>
+</html>
