@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Travel Time & Cost Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      background: #f7fafc;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 520px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 32px 28px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.11);
+      border-radius: 12px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #182c61;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 18px;
+      display: block;
+      color: #25396f;
+    }
+    select, button, input[type="text"] {
+      width: 100%;
+      padding: 10px 8px;
+      margin-top: 6px;
+      margin-bottom: 18px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      font-size: 15px;
+    }
+    select:focus, button:focus, input[type="text"]:focus {
+      outline: 3px solid #2d98da;
+      outline-offset: 2px;
+    }
+    button {
+      background: #2d98da;
+      color: #fff;
+      border: none;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    button:hover:enabled {
+      background: #3867d6;
+    }
+    .swap-btn {
+      width: auto;
+      padding: 8px 18px;
+      margin: 10px 0 18px 0;
+      background: #e1e1e1;
+      color: #25396f;
+      border: 1px solid #bbb;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .swap-btn:hover {
+      background: #d2d2d2;
+    }
+    .result, .loading {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 1.08em;
+    }
+    .result[aria-live] {
+      min-height: 4em;
+      display: block;
+    }
+    .loading {
+      color: #3867d6;
+      font-style: italic;
+    }
+    .places {
+      margin-top: 34px;
+      background: #f1f7fd;
+      border-radius: 7px;
+      padding: 16px;
+    }
+    .places h3 {
+      margin: 0 0 10px 0;
+      color: #218c5b;
+    }
+    .places ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .places li a {
+      color: #2d98da;
+      text-decoration: underline;
+    }
+    .star {
+      font-size: 1.2em;
+      color: #bbb;
+      cursor: pointer;
+      vertical-align: middle;
+      margin-left: 5px;
+      transition: color 0.3s;
+    }
+    .star.fav {
+      color: #FFD700;
+    }
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      cursor: help;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 210px;
+      background-color: #555;
+      color: #fff;
+      text-align: left;
+      border-radius: 6px;
+      padding: 8px 10px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -105px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 0.92em;
+    }
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+    .favorites-list {
+      margin: 18px 0 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .favorites-list li {
+      background: #f9f9e3;
+      margin: 0 0 7px 0;
+      padding: 9px 8px;
+      border-radius: 5px;
+      font-size: 0.98em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .favorites-list .star {
+      margin: 0;
+      font-size: 1.1em;
+    }
+    .map-link {
+      display: block;
+      margin: 10px auto 0 auto;
+      text-align: center;
+      color: #2d98da;
+      font-size: 1em;
+      text-decoration: underline;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 18px 5px;
+      }
+      .tooltip .tooltiptext {
+        font-size: 0.88em;
+      }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <h2>Travel Time & Cost Calculator</h2>
+    <form id="travelForm" autocomplete="off">
+      <label for="startCity">Starting City</label>
+      <select id="startCity" aria-label="Select starting city">
+        <option value="" disabled selected>Select starting city</option>
+      </select>
+
+      <button type="button" id="swapBtn" class="swap-btn" aria-label="Swap cities">&#8646; Swap</button>
+
+      <label for="destCity">Destination City</label>
+      <select id="destCity" aria-label="Select destination city">
+        <option value="" disabled selected>Select destination city</option>
+      </select>
+
+      <label for="mode">Mode of Transport
+        <span class="tooltip">&#9432;
+          <span class="tooltiptext" id="modeTip">
+            Car: ₹10/km, 60km/h, moderate emissions.<br>
+            Bus: ₹2-3/km, 45-50km/h, low emissions.<br>
+            Train: ₹1-2.5/km, 65-80km/h, lowest emissions.<br>
+            Flight: ₹6/km, 550km/h, highest emissions.<br>
+            Bike: ₹2/km, 45km/h, low emissions.<br>
+          </span>
+        </span>
+      </label>
+      <select id="mode" aria-label="Select mode of transport">
+        <option value="" disabled selected>Select mode</option>
+        <option value="car">Car</option>
+        <option value="bus">Bus</option>
+        <option value="train">Train</option>
+        <option value="flight">Flight</option>
+        <option value="bike">Bike</option>
+      </select>
+
+      <div id="busClassDiv" style="display:none;">
+        <label for="busClass">Bus Class</label>
+        <select id="busClass" aria-label="Select bus class">
+          <option value="ac">AC</option>
+          <option value="nonac">Non-AC</option>
+        </select>
+      </div>
+      <div id="trainClassDiv" style="display:none;">
+        <label for="trainClass">Train Class</label>
+        <select id="trainClass" aria-label="Select train class">
+          <option value="ac">AC</option>
+          <option value="sleeper">Sleeper</option>
+          <option value="general">General</option>
+        </select>
+      </div>
+      <button type="submit" id="calcBtn">Calculate</button>
+      <button type="button" id="resetBtn" style="background:#888; margin-top:-10px;">Reset</button>
+    </form>
+    <div class="loading" id="loading" style="display:none;">Calculating...</div>
+    <div class="result" id="result" aria-live="polite"></div>
+    <a id="mapLink" class="map-link" href="#" target="_blank" style="display:none;">View Route on Map</a>
+    <div class="places" id="placesSection" style="display:none;">
+      <h3>Suggested Places to Visit</h3>
+      <ul id="placesList"></ul>
+    </div>
+
+    <div id="favoritesContainer">
+      <h3 style="margin:22px 0 5px 0;">⭐ Favorite Routes (Local)</h3>
+      <ul class="favorites-list" id="favoritesList"></ul>
+    </div>
+  </div>
+  <script>
+    // Distance (km) between cities: symmetric matrix
+    // Add more cities as desired!
+    const distanceData = {
+      cities: {
+        "Mumbai": {"Delhi": 1410, "Chennai": 1338, "Kolkata": 1960, "Bangalore": 984, "Hyderabad": 710, "Ahmedabad": 530, "Pune": 150, "Chandigarh": 1640, "Jaipur": 1168, "Visakhapatnam": 1190, "Lucknow": 1360, "Goa": 590, "Vijayawada": 973, "Coimbatore": 1200, "Tirupati": 1140, "Patna":1630, "Madurai": 1450, "Mysore": 1030, "Kochi": 1370, "Thiruvananthapuram": 1670, "Agartala": 2900, "Vadodara": 410, "Raipur": 1130 },
+        "Delhi": {"Mumbai": 1410, "Chennai": 2180, "Kolkata": 1530, "Bangalore": 2150, "Hyderabad": 1560, "Ahmedabad": 960, "Pune": 1470, "Chandigarh": 240, "Jaipur": 280, "Visakhapatnam": 1760, "Lucknow": 555, "Goa": 1870, "Vijayawada": 1710, "Coimbatore": 2410, "Tirupati": 2110, "Patna": 1080, "Madurai": 2560, "Mysore": 2370, "Kochi": 2690, "Thiruvananthapuram": 2950, "Agartala": 2270, "Vadodara": 1020, "Raipur": 1250 },
+        "Chennai": {"Mumbai": 1338, "Delhi": 2180, "Kolkata": 1660, "Bangalore": 350, "Hyderabad": 630, "Ahmedabad": 1820, "Pune": 1150, "Chandigarh": 2470, "Jaipur": 2200, "Visakhapatnam": 800, "Lucknow": 2080, "Goa": 910, "Vijayawada": 450, "Coimbatore": 510, "Tirupati": 133, "Patna": 2090, "Madurai": 460, "Mysore": 480, "Kochi": 690, "Thiruvananthapuram": 770, "Agartala": 2740, "Vadodara": 1680, "Raipur": 1200 },
+        "Kolkata": {"Mumbai": 1960, "Delhi": 1530, "Chennai": 1660, "Bangalore": 1870, "Hyderabad": 1500, "Ahmedabad": 2060, "Pune": 2050, "Chandigarh": 1730, "Jaipur": 1530, "Visakhapatnam": 870, "Lucknow": 990, "Goa": 2220, "Vijayawada": 1200, "Coimbatore": 1670, "Tirupati": 1620, "Patna": 580, "Madurai": 1960, "Mysore": 1950, "Kochi": 2060, "Thiruvananthapuram": 2330, "Agartala": 1650, "Vadodara": 1780, "Raipur": 870 },
+        "Bangalore": {"Mumbai": 984, "Delhi": 2150, "Chennai": 350, "Kolkata": 1870, "Hyderabad": 570, "Ahmedabad": 1490, "Pune": 840, "Chandigarh": 2460, "Jaipur": 2000, "Visakhapatnam": 1050, "Lucknow": 1930, "Goa": 560, "Vijayawada": 700, "Coimbatore": 360, "Tirupati": 250, "Patna": 2100, "Madurai": 430, "Mysore": 150, "Kochi": 550, "Thiruvananthapuram": 730, "Agartala": 2700, "Vadodara": 1230, "Raipur": 1100 },
+        "Hyderabad": {"Mumbai": 710, "Delhi": 1560, "Chennai": 630, "Kolkata": 1500, "Bangalore": 570, "Ahmedabad": 1240, "Pune": 560, "Chandigarh": 1690, "Jaipur": 1400, "Visakhapatnam": 620, "Lucknow": 1310, "Goa": 660, "Vijayawada": 275, "Coimbatore": 900, "Tirupati": 560, "Patna": 1370, "Madurai": 950, "Mysore": 800, "Kochi": 1100, "Thiruvananthapuram": 1400, "Agartala": 2280, "Vadodara": 1020, "Raipur": 870 },
+        "Ahmedabad": {"Mumbai": 530, "Delhi": 960, "Chennai": 1820, "Kolkata": 2060, "Bangalore": 1490, "Hyderabad": 1240, "Pune": 660, "Chandigarh": 1200, "Jaipur": 660, "Visakhapatnam": 1700, "Lucknow": 1200, "Goa": 1100, "Vijayawada": 1500, "Coimbatore": 1680, "Tirupati": 1650, "Patna": 1650, "Madurai": 1680, "Mysore": 1450, "Kochi": 1760, "Thiruvananthapuram": 1920, "Agartala": 2340, "Vadodara": 110, "Raipur": 970 },
+        "Pune": {"Mumbai": 150, "Delhi": 1470, "Chennai": 1150, "Kolkata": 2050, "Bangalore": 840, "Hyderabad": 560, "Ahmedabad": 660, "Chandigarh": 1660, "Jaipur": 1370, "Visakhapatnam": 1230, "Lucknow": 1380, "Goa": 470, "Vijayawada": 840, "Coimbatore": 1020, "Tirupati": 980, "Patna": 1760, "Madurai": 1240, "Mysore": 960, "Kochi": 1270, "Thiruvananthapuram": 1550, "Agartala": 2950, "Vadodara": 540, "Raipur": 830 },
+        "Chandigarh": {"Mumbai": 1640, "Delhi": 240, "Chennai": 2470, "Kolkata": 1730, "Bangalore": 2460, "Hyderabad": 1690, "Ahmedabad": 1200, "Pune": 1660, "Jaipur": 510, "Visakhapatnam": 1950, "Lucknow": 830, "Goa": 2090, "Vijayawada": 1980, "Coimbatore": 2690, "Tirupati": 2380, "Patna": 1430, "Madurai": 2740, "Mysore": 2600, "Kochi": 2920, "Thiruvananthapuram": 3200, "Agartala": 2450, "Vadodara": 1260, "Raipur": 1390 },
+        "Jaipur": {"Mumbai": 1168, "Delhi": 280, "Chennai": 2200, "Kolkata": 1530, "Bangalore": 2000, "Hyderabad": 1400, "Ahmedabad": 660, "Pune": 1370, "Chandigarh": 510, "Visakhapatnam": 1660, "Lucknow": 575, "Goa": 1610, "Vijayawada": 1550, "Coimbatore": 2090, "Tirupati": 1790, "Patna": 1100, "Madurai": 2160, "Mysore": 1990, "Kochi": 2290, "Thiruvananthapuram": 2570, "Agartala": 2100, "Vadodara": 740, "Raipur": 1200 },
+        "Visakhapatnam": {"Mumbai": 1190, "Delhi": 1760, "Chennai": 800, "Kolkata": 870, "Bangalore": 1050, "Hyderabad": 620, "Ahmedabad": 1700, "Pune": 1230, "Chandigarh": 1950, "Jaipur": 1660, "Lucknow": 1350, "Goa": 1150, "Vijayawada": 350, "Coimbatore": 1050, "Tirupati": 850, "Patna": 1100, "Madurai": 1250, "Mysore": 1350, "Kochi": 1470, "Thiruvananthapuram": 1740, "Agartala": 1900, "Vadodara": 1680, "Raipur": 510 },
+
+        // New cities:
+        "Lucknow": {"Mumbai": 1360, "Delhi": 555, "Chennai": 2080, "Kolkata": 990, "Bangalore": 1930, "Hyderabad": 1310, "Ahmedabad": 1200, "Pune": 1380, "Chandigarh": 830, "Jaipur": 575, "Visakhapatnam": 1350, "Goa": 1630, "Vijayawada": 1280, "Coimbatore": 2240, "Tirupati": 1940, "Patna": 565, "Madurai": 2200, "Mysore": 2120, "Kochi": 2380, "Thiruvananthapuram": 2660, "Agartala": 1280, "Vadodara": 1150, "Raipur": 870},
+        "Goa": {"Mumbai": 590, "Delhi": 1870, "Chennai": 910, "Kolkata": 2220, "Bangalore": 560, "Hyderabad": 660, "Ahmedabad": 1100, "Pune": 470, "Chandigarh": 2090, "Jaipur": 1610, "Visakhapatnam": 1150, "Lucknow": 1630, "Vijayawada": 870, "Coimbatore": 740, "Tirupati": 890, "Patna": 2100, "Madurai": 950, "Mysore": 650, "Kochi": 740, "Thiruvananthapuram": 1100, "Agartala": 2460, "Vadodara": 1050, "Raipur": 1300},
+        "Vijayawada": {"Mumbai": 973, "Delhi": 1710, "Chennai": 450, "Kolkata": 1200, "Bangalore": 700, "Hyderabad": 275, "Ahmedabad": 1500, "Pune": 840, "Chandigarh": 1980, "Jaipur": 1550, "Visakhapatnam": 350, "Lucknow": 1280, "Goa": 870, "Coimbatore": 900, "Tirupati": 380, "Patna": 1200, "Madurai": 970, "Mysore": 1050, "Kochi": 1100, "Thiruvananthapuram": 1370, "Agartala": 1590, "Vadodara": 1450, "Raipur": 570},
+        "Coimbatore": {"Mumbai": 1200, "Delhi": 2410, "Chennai": 510, "Kolkata": 1670, "Bangalore": 360, "Hyderabad": 900, "Ahmedabad": 1680, "Pune": 1020, "Chandigarh": 2690, "Jaipur": 2090, "Visakhapatnam": 1050, "Lucknow": 2240, "Goa": 740, "Vijayawada": 900, "Tirupati": 470, "Patna": 1880, "Madurai": 210, "Mysore": 200, "Kochi": 180, "Thiruvananthapuram": 370, "Agartala": 3020, "Vadodara": 1450, "Raipur": 1420},
+        "Tirupati": {"Mumbai": 1140, "Delhi": 2110, "Chennai": 133, "Kolkata": 1620, "Bangalore": 250, "Hyderabad": 560, "Ahmedabad": 1650, "Pune": 980, "Chandigarh": 2380, "Jaipur": 1790, "Visakhapatnam": 850, "Lucknow": 1940, "Goa": 890, "Vijayawada": 380, "Coimbatore": 470, "Patna": 1720, "Madurai": 410, "Mysore": 430, "Kochi": 520, "Thiruvananthapuram": 700, "Agartala": 2670, "Vadodara": 1530, "Raipur": 990},
+
+        "Patna": {"Mumbai":1630, "Delhi": 1080, "Chennai": 2090, "Kolkata": 580, "Bangalore": 2100, "Hyderabad": 1370, "Ahmedabad": 1650, "Pune": 1760, "Chandigarh": 1430, "Jaipur": 1100, "Visakhapatnam": 1100, "Lucknow": 565, "Goa": 2100, "Vijayawada": 1200, "Coimbatore": 1880, "Tirupati": 1720, "Madurai": 1960, "Mysore": 1920, "Kochi": 2020, "Thiruvananthapuram": 2290, "Agartala": 1140, "Vadodara": 1680, "Raipur": 870},
+        "Madurai": {"Mumbai": 1450, "Delhi": 2560, "Chennai": 460, "Kolkata": 1960, "Bangalore": 430, "Hyderabad": 950, "Ahmedabad": 1680, "Pune": 1240, "Chandigarh": 2740, "Jaipur": 2160, "Visakhapatnam": 1250, "Lucknow": 2200, "Goa": 950, "Vijayawada": 970, "Coimbatore": 210, "Tirupati": 410, "Patna": 1960, "Mysore": 370, "Kochi": 240, "Thiruvananthapuram": 310, "Agartala": 3100, "Vadodara": 1760, "Raipur": 1570},
+        "Mysore": {"Mumbai": 1030, "Delhi": 2370, "Chennai": 480, "Kolkata": 1950, "Bangalore": 150, "Hyderabad":800, "Ahmedabad": 1450, "Pune": 960, "Chandigarh": 2600, "Jaipur": 1990, "Visakhapatnam": 1350, "Lucknow": 2120, "Goa": 650, "Vijayawada": 1050, "Coimbatore": 200, "Tirupati": 430, "Patna": 1920, "Madurai": 370, "Kochi": 360, "Thiruvananthapuram": 530, "Agartala": 3150, "Vadodara": 1300, "Raipur": 1320},
+        "Kochi": {"Mumbai": 1370, "Delhi": 2690, "Chennai": 690, "Kolkata": 2060, "Bangalore": 550, "Hyderabad": 1100, "Ahmedabad": 1760, "Pune": 1270, "Chandigarh": 2920, "Jaipur": 2290, "Visakhapatnam": 1470, "Lucknow": 2380, "Goa": 740, "Vijayawada": 1100, "Coimbatore": 180, "Tirupati": 520, "Patna": 2020, "Madurai": 240, "Mysore": 360, "Thiruvananthapuram": 210, "Agartala": 3250, "Vadodara": 1840, "Raipur": 1540},
+        "Thiruvananthapuram": {"Mumbai": 1670, "Delhi": 2950, "Chennai": 770, "Kolkata": 2330, "Bangalore": 730, "Hyderabad": 1400, "Ahmedabad": 1920, "Pune": 1550, "Chandigarh": 3200, "Jaipur": 2570, "Visakhapatnam": 1740, "Lucknow": 2660, "Goa": 1100, "Vijayawada": 1370, "Coimbatore": 370, "Tirupati": 700, "Patna": 2290, "Madurai": 310, "Mysore": 530, "Kochi": 210, "Agartala": 3460, "Vadodara": 2100, "Raipur": 1710},
+        "Agartala": {"Mumbai": 2900, "Delhi": 2270, "Chennai": 2740, "Kolkata": 1650, "Bangalore": 2700, "Hyderabad": 2280, "Ahmedabad": 2340, "Pune": 2950, "Chandigarh": 2450, "Jaipur": 2100, "Visakhapatnam": 1900, "Lucknow": 1280, "Goa": 2460, "Vijayawada": 1590, "Coimbatore": 3020, "Tirupati": 2670, "Patna": 1140, "Madurai": 3100, "Mysore": 3150, "Kochi": 3250, "Thiruvananthapuram": 3460, "Vadodara": 2690, "Raipur": 1930},
+        "Vadodara": {"Mumbai": 410, "Delhi": 1020, "Chennai": 1680, "Kolkata": 1780, "Bangalore": 1230, "Hyderabad": 1020, "Ahmedabad": 110, "Pune": 540, "Chandigarh": 1260, "Jaipur": 740, "Visakhapatnam": 1680, "Lucknow": 1150, "Goa": 1050, "Vijayawada": 1450, "Coimbatore": 1450, "Tirupati": 1530, "Patna": 1680, "Madurai": 1760, "Mysore": 1300, "Kochi": 1840, "Thiruvananthapuram": 2100, "Agartala": 2690, "Raipur": 1010},
+        "Raipur": {"Mumbai": 1130, "Delhi": 1250, "Chennai": 1200, "Kolkata": 870, "Bangalore": 1100, "Hyderabad": 870, "Ahmedabad": 970, "Pune": 830, "Chandigarh": 1390, "Jaipur": 1200, "Visakhapatnam": 510, "Lucknow": 870, "Goa": 1300, "Vijayawada": 570, "Coimbatore": 1420, "Tirupati": 990, "Patna": 870, "Madurai": 1570, "Mysore": 1320, "Kochi": 1540, "Thiruvananthapuram": 1710, "Agartala": 1930, "Vadodara": 1010}
+      }
+    };
+
+    const emissionsFactor = {
+      car: 0.12,      // kg/km
+      bus: 0.05,      // kg/km
+      train: 0.03,    // kg/km
+      flight: 0.18,   // kg/km
+      bike: 0.02
+    };
+
+    const transportModes = {
+      car: {speed: 60, costPerKm: 10},
+      bus: {
+        ac: {speed: 50, costPerKm: 3},
+        nonac: {speed: 45, costPerKm: 2}
+      },
+      train: {
+        ac: {speed: 80, costPerKm: 2.5},
+        sleeper: {speed: 70, costPerKm: 1.5},
+        general: {speed: 65, costPerKm: 1}
+      },
+      flight: {speed: 550, costPerKm: 6},
+      bike: {speed: 45, costPerKm: 2}
+    };
+
+    const suggestedPlaces = {
+      "Mumbai": ["Gateway of India", "Marine Drive", "Elephanta Caves"],
+      "Delhi": ["Red Fort", "Qutub Minar", "Lotus Temple"],
+      "Chennai": ["Marina Beach", "Fort St. George", "Kapaleeshwarar Temple"],
+      "Kolkata": ["Victoria Memorial", "Howrah Bridge", "Dakshineswar Temple"],
+      "Bangalore": ["Lalbagh", "Cubbon Park", "Bangalore Palace"],
+      "Hyderabad": ["Charminar", "Golconda Fort", "Hussain Sagar"],
+      "Ahmedabad": ["Sabarmati Ashram", "Kankaria Lake", "Akshardham Temple"],
+      "Pune": ["Shaniwar Wada", "Aga Khan Palace", "Sinhagad Fort"],
+      "Chandigarh": ["Rock Garden", "Sukhna Lake", "Rose Garden"],
+      "Jaipur": ["Amber Fort", "Hawa Mahal", "City Palace"],
+      "Visakhapatnam": ["RK Beach", "Kailasagiri", "Borra Caves"],
+      "Lucknow": ["Bara Imambara", "Rumi Darwaza", "Hazratganj Market"],
+      "Goa": ["Baga Beach", "Basilica of Bom Jesus", "Dudhsagar Waterfalls"],
+      "Vijayawada": ["Kanaka Durga Temple", "Prakasam Barrage", "Bhavani Island"],
+      "Coimbatore": ["Marudamalai Temple", "VOC Park and Zoo", "Brookefields Mall"],
+      "Tirupati": ["Sri Venkateswara Temple", "Kapila Theertham", "Silathoranam"],
+      "Patna": ["Golghar", "Mahavir Mandir", "Patna Museum"],
+      "Madurai": ["Meenakshi Amman Temple", "Thirumalai Nayakkar Palace", "Gandhi Memorial Museum"],
+      "Mysore": ["Mysore Palace", "Chamundi Hill", "Brindavan Gardens"],
+      "Kochi": ["Fort Kochi", "Mattancherry Palace", "Cherai Beach"],
+      "Thiruvananthapuram": ["Padmanabhaswamy Temple", "Kovalam Beach", "Napier Museum"],
+      "Agartala": ["Ujjayanta Palace", "Neermahal", "Sepahijala Wildlife Sanctuary"],
+      "Vadodara": ["Laxmi Vilas Palace", "Sayaji Gardens", "Baroda Museum"],
+      "Raipur": ["Nandan Van Zoo", "MM Fun City", "Mahant Ghasidas Museum"]
+    };
+
+    // --- Favorites Demo Storage ---
+    function getFavorites() {
+      return JSON.parse(localStorage.getItem('favRoutes') || '[]');
+    }
+    function setFavorites(list) {
+      localStorage.setItem('favRoutes', JSON.stringify(list));
+    }
+    function isFavRoute(route) {
+      return getFavorites().some(f => f.route === route);
+    }
+    function addFavRoute(route, text) {
+      let favs = getFavorites();
+      if (!favs.some(f => f.route === route)) {
+        favs.push({route, text});
+        setFavorites(favs);
+      }
+    }
+    function removeFavRoute(route) {
+      let favs = getFavorites().filter(f => f.route !== route);
+      setFavorites(favs);
+    }
+    function renderFavorites() {
+      const list = document.getElementById('favoritesList');
+      list.innerHTML = '';
+      let favs = getFavorites();
+      if (!favs.length) {
+        list.innerHTML = "<li style='color:#aaa;'>No favorites yet.</li>";
+        return;
+      }
+      favs.forEach(fav => {
+        const li = document.createElement('li');
+        li.innerHTML = `${fav.text} <span class="star fav" title="Remove from favorites">&#9733;</span>`;
+        li.querySelector('.star').onclick = () => {
+          removeFavRoute(fav.route);
+          renderFavorites();
+        };
+        list.appendChild(li);
+      });
+    }
+
+    // --- DOM Elements ---
+    const startCitySelect = document.getElementById('startCity');
+    const destCitySelect = document.getElementById('destCity');
+    const modeSelect = document.getElementById('mode');
+    const busClassDiv = document.getElementById('busClassDiv');
+    const trainClassDiv = document.getElementById('trainClassDiv');
+    const busClassSelect = document.getElementById('busClass');
+    const trainClassSelect = document.getElementById('trainClass');
+    const resultDiv = document.getElementById('result');
+    const loadingDiv = document.getElementById('loading');
+    const placesSection = document.getElementById('placesSection');
+    const placesList = document.getElementById('placesList');
+    const resetBtn = document.getElementById('resetBtn');
+    const swapBtn = document.getElementById('swapBtn');
+    const calcBtn = document.getElementById('calcBtn');
+    const mapLink = document.getElementById('mapLink');
+
+    function getCityList() {
+      return Object.keys(distanceData.cities).sort();
+    }
+    function populateCitySelects() {
+      const cities = getCityList();
+      startCitySelect.innerHTML = '<option value="" disabled selected>Select starting city</option>';
+      cities.forEach(city => {
+        const opt = document.createElement('option');
+        opt.value = city;
+        opt.textContent = city;
+        startCitySelect.appendChild(opt);
+      });
+      updateDestCities();
+    }
+    function updateDestCities(selectedDest) {
+      const cities = getCityList();
+      const startCity = startCitySelect.value;
+      destCitySelect.innerHTML = '<option value="" disabled selected>Select destination city</option>';
+      cities.forEach(city => {
+        if (city !== startCity) {
+          const opt = document.createElement('option');
+          opt.value = city;
+          opt.textContent = city;
+          if (selectedDest && city === selectedDest) opt.selected = true;
+          destCitySelect.appendChild(opt);
+        }
+      });
+    }
+    function updateClassOptions() {
+      const mode = modeSelect.value;
+      busClassDiv.style.display = (mode === 'bus') ? 'block' : 'none';
+      trainClassDiv.style.display = (mode === 'train') ? 'block' : 'none';
+    }
+    function getDistance(cityA, cityB) {
+      if (distanceData.cities[cityA] && distanceData.cities[cityA][cityB]) {
+        return distanceData.cities[cityA][cityB];
+      }
+      if (distanceData.cities[cityB] && distanceData.cities[cityB][cityA]) {
+        return distanceData.cities[cityB][cityA];
+      }
+      return null;
+    }
+    function showSuggestedPlaces(city) {
+      const places = suggestedPlaces[city];
+      if (places && places.length) {
+        placesList.innerHTML = '';
+        places.forEach(place => {
+          const li = document.createElement('li');
+          li.innerHTML = `<a href="suggested-places.html?city=${encodeURIComponent(city)}" target="_blank" rel="noopener">${place}</a>`;
+          placesList.appendChild(li);
+        });
+        placesSection.style.display = '';
+      } else {
+        placesSection.style.display = 'none';
+      }
+    }
+    function resetForm() {
+      populateCitySelects();
+      modeSelect.selectedIndex = 0;
+      busClassSelect.selectedIndex = 0;
+      trainClassSelect.selectedIndex = 0;
+      busClassDiv.style.display = 'none';
+      trainClassDiv.style.display = 'none';
+      resultDiv.textContent = '';
+      loadingDiv.style.display = 'none';
+      placesSection.style.display = 'none';
+      mapLink.style.display = 'none';
+    }
+    startCitySelect.addEventListener('change', () => {
+      updateDestCities();
+      resultDiv.textContent = '';
+      placesSection.style.display = 'none';
+      mapLink.style.display = 'none';
+    });
+    destCitySelect.addEventListener('change', () => {
+      if (destCitySelect.value) showSuggestedPlaces(destCitySelect.value);
+      else placesSection.style.display = 'none';
+      resultDiv.textContent = '';
+      mapLink.style.display = 'none';
+    });
+    modeSelect.addEventListener('change', updateClassOptions);
+    resetBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetForm();
+    });
+    swapBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const start = startCitySelect.value;
+      const dest = destCitySelect.value;
+      if (start && dest) {
+        startCitySelect.value = dest;
+        updateDestCities(start);
+      }
+    });
+    function setMapLink(start, dest) {
+      if (start && dest) {
+        mapLink.href = `https://www.google.com/maps/dir/${encodeURIComponent(start)}/${encodeURIComponent(dest)}`;
+        mapLink.style.display = '';
+      } else {
+        mapLink.style.display = 'none';
+      }
+    }
+    document.getElementById('travelForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      resultDiv.textContent = '';
+      placesSection.style.display = 'none';
+      mapLink.style.display = 'none';
+
+      const startCity = startCitySelect.value;
+      const destCity = destCitySelect.value;
+      const mode = modeSelect.value;
+      const busClass = busClassSelect.value;
+      const trainClass = trainClassSelect.value;
+
+      if (!startCity || !destCity) {
+        resultDiv.innerHTML = '<span style="color:#e55039;">Please select both starting and destination cities.</span>';
+        return;
+      }
+      if (startCity === destCity) {
+        resultDiv.innerHTML = '<span style="color:#e55039;">Starting and destination cities cannot be the same.</span>';
+        return;
+      }
+      if (!mode) {
+        resultDiv.innerHTML = '<span style="color:#e55039;">Please select a mode of transport.</span>';
+        return;
+      }
+      let distance = getDistance(startCity, destCity);
+      if (!distance) {
+        resultDiv.innerHTML = "Sorry, distance data is not available for this route.";
+        return;
+      }
+      let speed, costPerKm;
+      if (mode === 'car' || mode === 'flight' || mode === 'bike') {
+        speed = transportModes[mode].speed;
+        costPerKm = transportModes[mode].costPerKm;
+      } else if (mode === 'bus') {
+        speed = transportModes.bus[busClass].speed;
+        costPerKm = transportModes.bus[busClass].costPerKm;
+      } else if (mode === 'train') {
+        speed = transportModes.train[trainClass].speed;
+        costPerKm = transportModes.train[trainClass].costPerKm;
+      }
+      const emission = emissionsFactor[mode] ? (distance * emissionsFactor[mode]) : 0;
+      calcBtn.disabled = true;
+      loadingDiv.style.display = '';
+      setTimeout(() => {
+        loadingDiv.style.display = 'none';
+        calcBtn.disabled = false;
+        const timeHrs = distance / speed;
+        const cost = distance * costPerKm;
+        const routeText = `${startCity} → ${destCity} (${mode.charAt(0).toUpperCase() + mode.slice(1)})`;
+        resultDiv.innerHTML = `
+          <b>Route:</b> ${startCity} → ${destCity}<br>
+          <b>Distance:</b> ${distance} km<br>
+          <b>Estimated Time:</b> ${timeHrs.toFixed(1)} hrs<br>
+          <b>Estimated Cost:</b> ₹${cost.toFixed(0)}<br>
+          <b>Estimated CO₂ Emissions:</b> ${emission.toFixed(1)} kg
+          <span class="star${isFavRoute(routeText) ? ' fav' : ''}" id="favStar" title="Mark as favorite">&#9733;</span>
+        `;
+        document.getElementById('favStar').onclick = () => {
+          if (isFavRoute(routeText)) {
+            removeFavRoute(routeText);
+            document.getElementById('favStar').classList.remove('fav');
+          } else {
+            addFavRoute(routeText, routeText);
+            document.getElementById('favStar').classList.add('fav');
+          }
+          renderFavorites();
+        };
+        showSuggestedPlaces(destCity);
+        setMapLink(startCity, destCity);
+      }, 800);
+    });
+    populateCitySelects();
+    updateClassOptions();
+    renderFavorites();
+  </script>
+</body>
+</html>
